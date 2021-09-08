@@ -5,7 +5,10 @@ from .views import *
 from django.conf.urls import url
 
 router = routers.DefaultRouter()
+                                  
+
 router.register(r'FlashExs',FlashFillExecutionList,basename='FlashExs')
+router.register(r'FlashFreeLoopExs',FlashFillExecutionFreeLoopList,basename='FlashFreeLoopExs')
 
 
 
@@ -13,6 +16,7 @@ router.register(r'FlashExs',FlashFillExecutionList,basename='FlashExs')
 
 urlpatterns = [
     url(r'sessions/', FlashFillExecutionList.as_view()),
+    url(r'sessions/', FlashFillExecutionFreeLoopList.as_view()),
 
 ]
 urlpatterns += router.urls

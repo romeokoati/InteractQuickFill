@@ -1,8 +1,11 @@
+import copy
+import re
 from django.http.response import JsonResponse
 from django.shortcuts import render
 from django.http import JsonResponse
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from collections import OrderedDict
 import QuickFill.Algorithmes.InteractQuickFill as IFF
 import os
 import time
@@ -25,48 +28,85 @@ class QuickFillExecutionList(APIView):
             DataEntreeBrute = eval(request.data.get("data").get("DataEntreeBrute"))
             DataGlobal = eval(request.data.get("data").get("DataGlobal"))
 
-
             Test = IFF.InteractQuickFill()
             Test.GetClassC()
             Entrer = DataGlobal[0]["Entrer"]
             IndiceColoneSortie = len(Entrer.keys())+1
             Sortie = DataGlobal[0]["Output"]
-            
             ListeEntreFormeAtraiter = {}
-            
-           
-            
             MonElment  = {}
+            dict1= {}
             Montuple = []
-            
             Maformuledecoupe = []
 
-        
-            
-            
+
             for elt in DataGlobal:
                     for elt2 in elt:
                         MonElment[elt2] =  elt[elt2]
                         break
             
+            for i in sorted (MonElment.keys()) :
+                dict1[i] = MonElment[i]
             
+            MonElment =  dict1
+   
             for ett in MonElment:
-                    Formuletest = Test.ExpressionConcatenate(Entrer,MonElment[ett])
-                    Formuletest = Formuletest[-1][0]
-                    Formuletest = "Concatenate(" + "˅".join(Formuletest) + ")"
-                    Maformuledecoupe.append(Formuletest)
-                    
+                if MonElment[ett] == "ConstStr":
+                        decoupekeyval = ett.split("***")
+                        Formuletest = "ConstStr(" + decoupekeyval[1] + ")"
+                        
+                else:
+                        Formuletest = Test.ExpressionConcatenateAbsolute2(Entrer,MonElment[ett])
+                        Formuletest = list(Test.flatten(Formuletest[0][0]))
+                        Formuletest = "".join(Formuletest)
+                        
+                        
+                
+                Maformuledecoupe.append(Formuletest)
+            
+            
+           
+            
             for elt in DataEntreeBrute:
                     Traite1 = {}
                     i = 0
+                    chaineRetire = []
                     for ett in Maformuledecoupe:
                         i=i+1
-                        Traite1["b"+str(i)] = Test.ExecuteElementFromExpressSustr2(elt["Entrer"],ett)
+                        if(ett.startswith("ConstStr")):
+                                Traite1["b"+str(i)] = ett
+                        else:
+                                if i>1:
+                                        TraiementEntrer = copy.deepcopy(elt["Entrer"]) 
+                                        if Traite1["b"+str(i-1)].startswith("ConstStr"):
+                                                continue
+                                        else:
+                                                chaineRetire.append(Traite1["b"+str(i-1)])
+                                        for ettb in chaineRetire:
+                                                for key in TraiementEntrer:
+                                                        new_string = TraiementEntrer[key]
+                                                        r1 =re.compile(re.escape(ettb))
+                                                        indice = re.search(r1,new_string)
+                                                        if indice == None:
+                                                                continue
+                                                        else:
+                                                                last_char_index = indice.end()
+                                                                new_string = new_string[last_char_index:]
+                                                                TraiementEntrer[key] = new_string
+                                                
+                                        
+                                else:
+                                        TraiementEntrer = elt["Entrer"]
+                                
+
+                                Traite1["b"+str(i)] = Test.ExecuteElementFromExpressRegex(TraiementEntrer,ett)
+                    
+
                     
                     ListeEntreFormeAtraiter[json.dumps(elt)] = [elt["position"],Traite1,elt["Entrer"]]
                             
-                    
-                    
+
+     
             Montuple.append(json.dumps(MonElment))
             Montuple.append(json.dumps(Entrer))
             Montuple.append(Sortie)
@@ -87,14 +127,15 @@ class QuickFillExecutionList(APIView):
             
             
             s = Test.GetInteractData()[0]
-            print("Afaire ici mmmmmm : " , s) 
             programme = list(Test.GenerateStringProgram(s))
+            print("Progammme recuperer : " , programme[0])
             datas["NombreExemples"] = len(programme)
             datas["IndiceColoneSortie"] = IndiceColoneSortie
             
             
             
             for elt in DataEntreeBrute:
+                    print("Liste a traiter : " ,ListeEntreFormeAtraiter[json.dumps(elt)][1])
                     elt["Output"] = Test.ExecuteFonction(programme[0],ListeEntreFormeAtraiter[json.dumps(elt)][1],ListeEntreFormeAtraiter[json.dumps(elt)][2])
             
             

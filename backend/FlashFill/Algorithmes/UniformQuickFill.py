@@ -90,6 +90,53 @@ class UniformQuickFill:
                     yield sub_x
             else:
                 yield x
+
+
+
+    def  GenerateStr3(self,entree, s):
+        """ 
+        cette fonction retourne  l'ensemble des facons d'obtenir s a partir de l'etat d'entree sigma
+        elle retourne un dag, une structure de donnee qui permet de representer des grands ensembles
+        elle utilse le principe de l'algorithme CYK, base sur la programmation dynamique, qui consiste a reconnaitre un mot
+        dans un langage en passant  par sa table de transition.
+        """
+        EtaTilda = set() ; PsiTilda = set() 
+        """ EtaSource = 0
+        EtaTarget = len(s) """  
+        W = {}    # table de transition, pour chaque arrete (i,j) associe l'etique qui est un ensemble d'expressions at0mique
+
+        for i in range(len(s)+1):      
+            EtaTilda = EtaTilda.union(set([i]))  # construction de l'ensemble des noeuds
+
+        for i in range(len(s)+1):
+            k = i+1
+            for j in range(k,len(s)+1):
+                PsiTilda = PsiTilda.union(set([(i,j)]))   # ensemble des aretes
+                #PsiTilda = list(PsiTilda)
+    
+        for i in PsiTilda:                                # Pour chaque arete
+            x = "ConstStr("+s[i[0]:i[1]]+")"                # s[i:j] =  SubStr(i,j), c'est pourquoi je concerve i[1] au lieu de i[1]-1
+            ConstString = set([x])
+            SubString = self.GenerateSubstring(entree,s[i[0]:i[1]])
+            ConstString = ConstString.union(SubString) 
+            
+            W[i] = ConstString  
+
+
+        baseformule = self.ExpressionConcatenate(entree,s)
+        baseformule = baseformule[-1][0]
+
+
+
+        if baseformule != [] :
+            
+            baseformule = "Concatenate(" + "˅".join(baseformule) + ")"
+            W[(0,len(s))] =  W[(0,len(s))].union(set([baseformule]))
+        
+        EtaTilda = list(EtaTilda)
+        
+        return W,EtaTilda
+    
     
     def  GenerateStr2(self,entree, s):
         """ 
@@ -1618,7 +1665,34 @@ class UniformQuickFill:
         
         return NewDicoOutput
             
+
+    def GenerateStringProgram3(self,S):
+        """ 
+        Prend un ensemble de paires d'exemples  (entree, sortie) et retourne l'ensemble des programmes coherents avec  les exemples
+        i.e  retourne l'ensemble de programmes qui permettent d'obtenir les sorties s a partir des entrees
+        """
+        T = []
+        B = {}  
+        l = list()     
+
+        
+        for elt in S:
+            Result = self.GenerateStr3(json.loads(elt[0]),elt[1])
             
+            T.append((elt[0],Result))  # T est une liste de tuple (sigma, GenerateStrResult)          
+        
+
+        if len(T) > 0:
+            Programs = self.ProgramsSet(T[0][1][1],T[0][1][0])
+            #Programs = self.ProgramsSet(T[0][1][1],T[0][1][0],T[1][1][1],T[1][1][0])
+            for i in range(1,len(T)):             
+                Programs = Programs.intersection(self.ProgramsSet(T[i][1][1],T[i][1][0]))
+                #Programs = self.ProgramsSet(Programs[1],Programs[0],T[i][1][1],T[i][1][0])
+
+             
+        return Programs
+
+           
     def GenerateStringProgram2(self,S):
         """ 
         Prend un ensemble de paires d'exemples  (entree, sortie) et retourne l'ensemble des programmes coherents avec  les exemples

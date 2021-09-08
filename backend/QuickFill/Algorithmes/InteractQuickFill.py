@@ -334,7 +334,8 @@ class InteractQuickFill:
         return ''
 
 
-    def ExpressionConcatenate(self,entree,s):
+
+    def ExpressionConcatenateAbsolute2(self,entree,s):
         """ retourne la formule concatenate(de SubStr2) et concatenate(de ConstStr) qui permet d'obtenir s a partir de entree """
         
         k1 = 0
@@ -408,8 +409,8 @@ class InteractQuickFill:
                     booleen = booleen or False
                     
             if booleen:
-                ExpressionExecute.append((key,expression,result))
-                ExpressionExecuteFormule.append("SubStr2(" + key + "," + "TokenSeq(" + Tokenname + ")," + str(list(result)[0]+1) + ")")
+                ExpressionExecute.append(expression)
+                ExpressionExecuteFormule.append(Tokenname)
             else:
                 if chaine == s:
                     booldoitcontinuer = True
@@ -485,6 +486,201 @@ class InteractQuickFill:
                                     booleen = booleen or False
 
                             break
+                    
+
+                    if booleen:
+                        break
+                    else:
+                        booleen = booleen or False
+                        
+                if booleen:
+                    ExpressionExecute.append(expression)
+                    ExpressionExecuteFormule.append(Tokenname)
+                else:
+                    if chaine == s:
+                        booldoitcontinuer = True
+                        break
+                    ExpressionExecute.append(chaine)
+                    ExpressionExecuteFormule.append("ConstStr(" + chaine + ")")
+             
+        P1.append(ExpressionExecute) # P1 est une liste de tuple
+        P2.append(ExpressionExecuteFormule) # liste 'expression Substr2, ConstStr
+        
+        
+        
+           
+        return [P1,P2]
+    
+    
+
+    def ExpressionConcatenate(self,entree,s):
+        """ retourne la formule concatenate(de SubStr2) et concatenate(de ConstStr) qui permet d'obtenir s a partir de entree """
+        
+        k1 = 0
+        r1 = []
+        Tokens = []
+        ExpressionExecute = []
+        ExpressionExecuteFormule = []
+        P1 = []
+        P2 = []
+        booldoitcontinuer = False
+        DejaTraiter = []
+
+        k=len(s)
+
+        while  k1 < k :
+            for cle in self.ClasseC:
+                Token = self.ClasseC[cle]
+                TokenComp = re.compile(Token)
+                Test = TokenComp.match(s[k1:k]) # k = len(s)
+                
+                if Test != None:
+                    k1 = k1 + Test.start()
+                    if cle == 'NonDigitTok' :
+                        bestkey = self.GetBestKey(Test.group())
+                        if bestkey != '':
+                            cle = bestkey
+                            Token = self.ClasseC[cle]
+                            
+                    Tokens.append((k1,Token,cle,Test.group()))
+                    k1 =  k1 + Test.end()
+                    break
+                
+        for elt in Tokens:
+            
+            booleen = False
+            
+            for key in entree:
+                
+                elt = list(elt) # elt est un tuple, on le convertir en  liste
+                chaine = elt[3]
+                expression = elt[1]
+                Tokenname = elt[2]
+                TokenComp = re.compile(expression)
+                Test = TokenComp.findall(entree[key]) # Test est une liste
+                
+                for p in range(len(Test)):
+
+                    K = len(chaine)
+                    res = [Test[p][i: j] for i in range(len(Test[p])) for j in range(i + 1, len(Test[p]) + 1) if len(Test[p][i:j]) == K]
+
+                    if chaine in res:
+                        print("nnnnnnnnnnnnnnnnnnnnnnnnnnnnnn" ,key, (chaine,p))
+                        if (len(chaine) == len(Test[p])) and (any(((chaine,p,key)==i) for i in DejaTraiter)==False): 
+                            result = (p,-2)
+                            DejaTraiter.append((chaine,p,key))
+                            booleen = booleen or True
+                            break
+                        else:
+                            if (res[0] == chaine) and (any(((chaine,p,key)==i) for i in DejaTraiter)==False):
+                                result = (p,0,len(chaine))
+                                DejaTraiter.append((chaine,p,key))
+                                booleen = booleen or True
+                                break
+                            elif (res[-1] == chaine) and (any(((chaine,p,key)==i) for i in DejaTraiter)==False):
+                                result = (p,-1,len(chaine))
+                                DejaTraiter.append((chaine,p,key))
+                                booleen = booleen or True
+                                break
+                            else:
+                                booleen = booleen or False
+                                
+
+                        
+                
+
+                if booleen:
+                    break
+                else:
+                    booleen = booleen or False
+                    
+            if booleen:
+                ExpressionExecute.append((key,expression,result))
+                ExpressionExecuteFormule.append("SubStr2(" + key + "," + "TokenSeq(" + Tokenname + ")," + str(list(result)[0]+1) + ")")
+                
+                
+            else:
+                if chaine == s:
+                    booldoitcontinuer = True
+                    break
+                ExpressionExecute.append(chaine)
+                ExpressionExecuteFormule.append("ConstStr(" + chaine + ")")                          
+        
+        if ExpressionExecuteFormule == []:
+            booldoitcontinuer = True
+
+        DejaTraiter = []
+        
+        
+        if booldoitcontinuer :
+            k1 = 0
+            r1 = []
+            Tokens = []
+            ExpressionExecute = []
+            ExpressionExecuteFormule = []
+            P1 = []
+            P2 = []
+            booldoitcontinuer = False
+
+            k=len(s)
+            
+            while  k1 < k :
+                for cle in self.ClasseC:
+                    Token = self.ClasseC[cle]
+                    TokenComp = re.compile(Token)
+                    Test = TokenComp.match(s[k1:k1+1]) # k = len(s)
+                    
+                    if Test != None:
+                        k1 = k1 + Test.start()
+                        if cle == 'NonDigitTok' :
+                            bestkey = self.GetBestKey(Test.group())
+                            if bestkey != '':
+                                cle = bestkey
+                                Token = self.ClasseC[cle]
+                                
+                        Tokens.append((k1,Token,cle,Test.group()))
+                        k1 =  k1 + Test.end()
+                        break                              
+
+            for elt in Tokens:
+                
+                booleen = False
+                
+                for key in entree:
+                    
+                    elt = list(elt) # elt est un tuple, on le convertir en  liste
+                    chaine = elt[3]
+                    expression = elt[1]
+                    Tokenname = elt[2]
+                    TokenComp = re.compile(expression)
+                    Test = TokenComp.findall(entree[key]) # Test est une liste
+
+                    for p in range(len(Test)):
+
+                        K = len(chaine)
+                        res = [Test[p][i: j] for i in range(len(Test[p])) for j in range(i + 1, len(Test[p]) + 1) if len(Test[p][i:j]) == K]
+
+                        if chaine in res:
+                            if (len(chaine) == len(Test[p])) and (any(((chaine,p,key)==i)  for i in DejaTraiter)==False): 
+                                result = (p,-2)
+                                DejaTraiter.append((chaine,p,key))
+                                booleen = booleen or True
+                                break
+                            else:
+                                if (res[0] == chaine) and (any(((chaine,p,key)==i) for i in DejaTraiter)==False):
+                                    result = (p,0,len(chaine))
+                                    DejaTraiter.append((chaine,p,key))
+                                    booleen = booleen or True
+                                    break
+                                elif (res[-1] == chaine) and (any(((chaine,p,key)==i)  for i in DejaTraiter)==False):
+                                    result = (p,-1,len(chaine))
+                                    DejaTraiter.append((chaine,p,key))
+                                    booleen = booleen or True
+                                    break
+                                else:
+                                    booleen = booleen or False
+
+                            
                     
 
                     if booleen:
@@ -1013,9 +1209,10 @@ class InteractQuickFill:
 
     def ExecuteBaseCaseConstStr(self,s):
 
-        s = s.replace("ConstStr(","")
-        s = s.replace(")","")
-        return s
+        s = s.replace("ConstStr(","",1)
+        last_char_index = s.rfind(")")
+        new_string = s[:last_char_index]
+        return new_string
         
 
 
@@ -1177,26 +1374,17 @@ class InteractQuickFill:
             return self.BOTTOM
 
 
-    def ExecuteElementFromExpressSustr2(self,sigma,TraceExpression):
-        """ Execute une expression concatenate(trace expression)sur une chaine et retoune le resultat(Sous chaine) obtenu """
-        # x est la variable entiere qui nous sert de compteur de boucle dans LoopR dont k
-        Result = []
-        AtomiqueExpression =  TraceExpression.split("˅")
-        AtomiqueExpression[0] = AtomiqueExpression[0].replace("Concatenate(","",1)
-        b = list(AtomiqueExpression[-1])
-        b[-1] = ""
-        AtomiqueExpression[-1] = "".join(b)
+    def ExecuteElementFromExpressRegex(self,sigma,RegexExpression):
+        """ Recuper la permeir occuemece de l'espression regex dans l'entre sigma"""
+        TokenComp = re.compile(RegexExpression)
+        Test = TokenComp.findall(sigma["v1"])
+        
+        
+        if Test != None :
+            return Test[0]
 
-        for elt in AtomiqueExpression:
-            if elt.startswith("SubStr2"):
-                y = self.ExecuteBaseCaseExpressSubstr2(elt,sigma)
-                Result.append(y)
-            
-            
-        if self.BOTTOM in Result:
-            return self.BOTTOM
-        else:
-            return "".join(Result)  
+        
+        
         
     
     def ExecuteFonction(self,TraceExpression,entree,valeur):
