@@ -1379,9 +1379,10 @@ class InteractQuickFill:
         TokenComp = re.compile(RegexExpression)
         Test = TokenComp.findall(sigma["v1"])
         
-        
-        if Test != None :
+        if Test != None and len(Test)>0:
             return Test[0]
+        else:
+            return ""
 
         
         

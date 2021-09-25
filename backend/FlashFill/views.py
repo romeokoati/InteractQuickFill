@@ -7,6 +7,7 @@ import FlashFill.Algorithmes.UniformQuickFill as UFF
 import os
 import time
 import psutil
+import random
 from backend.settings import BASE_DIR
 
 
@@ -31,6 +32,7 @@ class FlashFillExecutionList(APIView):
         IndiceColoneSortie = ""
         MessageCles = ""
         NombreExemples = 0
+        random_index =0 
         i = 0
         for etl in ListOfElements:
             decoupe =  etl[0].split("***")
@@ -74,7 +76,8 @@ class FlashFillExecutionList(APIView):
             ListeOfProgrammes = list(Test.GenerateStringProgram2(Test.GetExamples()[0]))
             if len(ListeOfProgrammes) != 0:
                 NombreExemples = len(ListeOfProgrammes)
-                spetResultOne = Test.ExecuteOnElements(filename,ListeOfProgrammes[0])
+                random_index = random.randint(0,len(ListeOfProgrammes)-1)
+                spetResultOne = Test.ExecuteOnElements(filename,ListeOfProgrammes[random_index])
                 spetResultOne = Test.TandformeToOrignalForm(spetResultOne)
                 
                 for elt2 in spetResultOne:
@@ -99,6 +102,12 @@ class FlashFillExecutionList(APIView):
         datas["IndiceColoneSortie"] = IndiceColoneSortie
         datas["timewastFlasfill"] = timewastFlasfill
         datas["NombreExemples"] = NombreExemples
+        
+        datas["indiceduprogrammechoisi"] = random_index
+        datas["listedesprogrammes"] = ListeOfProgrammes
+                
+        
+        
                 
         
         
@@ -135,6 +144,7 @@ class FlashFillExecutionFreeLoopList(APIView):
         IndiceColoneSortie = ""
         MessageCles = ""
         NombreExemples = 0
+        random_index =0
         i = 0
         for etl in ListOfElements:
             decoupe =  etl[0].split("***")
@@ -178,7 +188,8 @@ class FlashFillExecutionFreeLoopList(APIView):
             ListeOfProgrammes = list(Test.GenerateStringProgram3(Test.GetExamples()[0]))
             if len(ListeOfProgrammes) != 0:
                 NombreExemples = len(ListeOfProgrammes)
-                spetResultOne = Test.ExecuteOnElements(filename,ListeOfProgrammes[0])
+                random_index = random.randint(0,len(ListeOfProgrammes)-1)
+                spetResultOne = Test.ExecuteOnElements(filename,ListeOfProgrammes[random_index])
                 spetResultOne = Test.TandformeToOrignalForm(spetResultOne)
                 
                 for elt2 in spetResultOne:
@@ -203,9 +214,11 @@ class FlashFillExecutionFreeLoopList(APIView):
         datas["IndiceColoneSortie"] = IndiceColoneSortie
         datas["timewastFlasfill"] = timewastFlasfill
         datas["NombreExemples"] = NombreExemples
+        datas["indiceduprogrammechoisi"] = random_index
+        datas["listedesprogrammes"] = ListeOfProgrammes
                 
         
-        
+        print("fffffffffffffffffff : " , datas["indiceduprogrammechoisi"])
         
 
 

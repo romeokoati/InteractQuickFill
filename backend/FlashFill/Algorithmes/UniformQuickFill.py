@@ -1619,7 +1619,7 @@ class UniformQuickFill:
                 Result.append(y)
 
             elif elt.startswith("ConstStr"):
-                y = self.ExecuteBaseCaseConstStr(elt,sigma)
+                y = self.ExecuteBaseCaseConstStr(elt)
                 Result.append(y)
             
             
